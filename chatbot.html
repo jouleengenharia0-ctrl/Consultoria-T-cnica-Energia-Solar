@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Engenheiro Solar IA</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #e9ecef; display: flex; flex-direction: column; height: 100vh; margin: 0; }
+        #header { background: #2c3e50; color: white; padding: 15px; text-align: center; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        #chat-container { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 15px; }
+        .message { max-width: 80%; padding: 12px; border-radius: 15px; line-height: 1.5; position: relative; }
+        .user { align-self: flex-end; background-color: #007bff; color: white; border-bottom-right-radius: 2px; }
+        .bot { align-self: flex-start; background-color: white; color: #333; border-bottom-left-radius: 2px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+        #input-area { padding: 20px; background: white; display: flex; gap: 10px; border-top: 1px solid #dee2e6; }
+        input { flex: 1; padding: 12px; border: 1px solid #ced4da; border-radius: 5px; outline: none; }
+        button { padding: 10px 20px; background-color: #28a745; color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; }
+        button:hover { background-color: #218838; }
+    </style>
+</head>
+<body>
+
+<div id="header">
+    <h2>Consultoria Técnica: Energia Solar</h2>
+    <p style="margin:0; font-size: 0.8em;">Especialista em Geração Distribuída</p>
+</div>
+
+<div id="chat-container">
+    <div class="message bot">Olá! Sou seu engenheiro consultor especialista em sistemas fotovoltaicos. Como posso te ajudar com seu projeto ou dúvidas sobre a Lei 14.300 hoje?</div>
+</div>
+
+<div id="input-area">
+    <input type="text" id="user-input" placeholder="Pergunte sobre inversores, painéis, dimensionamento...">
+    <button onclick="enviarPergunta()">Enviar</button>
+</div>
+
+<script type="module">
+  import { GoogleGenerativeAI } from "https://esm.run/@google/generative-ai";
+
+  // Sua chave configurada
+  const API_KEY = "AIzaSyD3EeoZetLPEQ-fJLYn9jCnE8i0Z4SqQSE";
+  const genAI = new GoogleGenerativeAI(API_KEY);
+
+  // Instrução de Especialidade (Persona de Engenheiro)
+  const instrucaoSistema = `Você é um Engenheiro Eletricista sênior, especializado em Energia Solar Fotovoltaica e Geração Distribuída no Brasil. 
+  Sua função é tirar dúvidas técnicas sobre:
+  1. Dimensionamento de sistemas (On-grid, Off-grid e Híbridos).
+  2. Equipamentos (Inversores, Microinversores, Módulos, Strings).
+  3. Normas (NBR 16274, NBR 16690) e Resoluções da ANEEL (Lei 14.300, REN 482, REN 1000).
+  4. Análise de viabilidade (Payback, LCOE, taxas de disponibilidade e fios).
+  
+  Responda de forma profissional, técnica e objetiva. Se o usuário perguntar algo que não seja relacionado a energia solar ou elétrica, explique gentilmente que sua especialidade é focada em energia renovável.`;
+
+  async function enviarPergunta() {
+    const input = document.getElementById('user-input');
+    const container = document.getElementById('chat-container');
+    const texto = input.value;
+    
+    if(!texto) return;
+
+    // Adiciona mensagem do usuário
+    container.innerHTML += `<div class="message user">${texto}</div>`;
+    input.value = '';
+    container.scrollTop = container.scrollHeight;
+
+    try {
+        const model = genAI.getGenerativeModel({ 
+            model: "gemini-1.5-flash",
+            systemInstruction: instrucaoSistema 
+        });
+
+        const result = await model.generateContent(texto);
+        const resposta = result.response.text();
+
+        // Adiciona resposta do Bot
+        container.innerHTML += `<div class="message bot">${resposta}</div>`;
+    } catch (error) {
+        console.error(error);
+        container.innerHTML += `<div class="message bot" style="color:red">Erro técnico: Verifique sua conexão ou a validade da chave API no console.</div>`;
+    }
+    
+    container.scrollTop = container.scrollHeight;
+  }
+
+  // Permitir enviar com a tecla Enter
+  document.getElementById('user-input').addEventListener('keypress', function (e) {
+    if (e.key === 'Enter') enviarPergunta();
+  });
+
+  window.enviarPergunta = enviarPergunta;
+</script>
+
+</body>
+</html>
